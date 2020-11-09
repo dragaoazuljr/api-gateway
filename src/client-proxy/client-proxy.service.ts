@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
@@ -6,14 +7,36 @@ export class ClientProxyService {
 
   private clientAdminBackend: ClientProxy;
 
-  constructor(){
+  constructor(
+    private readonly _configService: ConfigService
+  ){
     this.clientAdminBackend = ClientProxyFactory.create({
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://user:KMiBwRe8dlKg@52.91.4.62:5672/smartranking'],
+          urls: [this._configService.get('RABBITMQ_URL')],
           queue: 'admin-backend'
         }
       })
+  }
+
+  createProxyFactory(){
+    return ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [this._configService.get('RABBITMQ_URL')],
+        queue: 'admin-desafios'
+      }
+    })
+  }
+
+  createProxyRankings(){
+    return ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [this._configService.get('RABBITMQ_URL')],
+        queue: 'rankings'
+      }
+    })
   }
 
   emit(pattern: string, data: any){

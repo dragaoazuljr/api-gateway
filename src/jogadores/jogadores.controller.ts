@@ -1,5 +1,9 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { RedshiftData } from 'aws-sdk';
+import { AwsService } from 'src/aws/aws.service';
 import { ClientProxyService } from 'src/client-proxy/client-proxy.service';
+import { fileURLToPath } from 'url';
 import { AtualizarJogadorDto } from './dtos/atualizar-jogador.dto';
 import { CriarJogadorDto } from './dtos/criar-jogador.dto';
 
@@ -7,7 +11,8 @@ import { CriarJogadorDto } from './dtos/criar-jogador.dto';
 export class JogadoresController {
     
     constructor(
-        private readonly _clientProxyService: ClientProxyService
+        private readonly _clientProxyService: ClientProxyService,
+        private readonly _awsService: AwsService
     ) {}
 
     @Post()
@@ -44,4 +49,23 @@ export class JogadoresController {
         @Param('_id') _id: string ) {
             this._clientProxyService.emit('apagar-jogador', _id)
         }
+
+    @Post('/:_id/upload')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadArquivos (
+        @UploadedFile() file,
+        @Param('_id') _id: string
+    ) {
+        const jogador: AtualizarJogadorDto = await this._clientProxyService.send('consultar-jogador', _id).toPromise();
+        if(!jogador){
+            throw new BadRequestException('jogador nao encontrado');
+        }
+        const data = await this._awsService.uploadArquivo(file, _id);
+        jogador.urlFotoJogador = data.url;
+        
+        await this._clientProxyService.emit('atualizar-jogador', {_id, jogador});
+        
+        let jogadorAtualizado = await this._clientProxyService.send('consultar-jogador', _id);
+        return jogadorAtualizado;
+    }
 }
