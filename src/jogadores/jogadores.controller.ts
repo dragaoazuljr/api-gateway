@@ -1,4 +1,5 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RedshiftData } from 'aws-sdk';
 import { AwsService } from 'src/aws/aws.service';
@@ -25,6 +26,7 @@ export class JogadoresController {
             this._clientProxyService.emit('criar-jogador', criarJogadorDto)
         }
 
+    @UseGuards(AuthGuard('jwt'))
     @Get()
     async consultarJogador(
         @Query('_id') _id: string) {

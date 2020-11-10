@@ -1,0 +1,9 @@
+---
+    applications:
+        - name: api-gateway-sr
+          path: dist
+          instances: 3
+          memory: 128MB
+          disk_qouta: 1GB
+          command: node main
+          health-check-type: none
