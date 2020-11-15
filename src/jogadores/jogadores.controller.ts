@@ -32,7 +32,16 @@ export class JogadoresController {
         @Query('_id') _id: string) {
             return this._clientProxyService.send('consultar-jogador', _id ? _id : '');
         }
-    
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('/email')
+    async consultarJogadorPorEmail(
+        @Query('email') email: string 
+    ){
+        return this._clientProxyService.send('consultar-jogador-email', email)
+    }    
+
+    @UseGuards(AuthGuard('jwt'))    
     @Put('/:_id')
     @UsePipes(ValidationPipe)
     async atualizarJogador(
@@ -45,6 +54,7 @@ export class JogadoresController {
             this._clientProxyService.emit('atualizar-jogador', {_id: _id, jogador: atualizarJogadroDto})
         }
 
+    @UseGuards(AuthGuard('jwt'))
     @Delete('/:_id')
     @UsePipes(ValidationPipe)
     async apagarJogador(
@@ -52,6 +62,7 @@ export class JogadoresController {
             this._clientProxyService.emit('apagar-jogador', _id)
         }
 
+    @UseGuards(AuthGuard('jwt'))
     @Post('/:_id/upload')
     @UseInterceptors(FileInterceptor('file'))
     async uploadArquivos (
